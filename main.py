@@ -1,5 +1,5 @@
 import os
-from typing import Dict
+from typing import Dict, Tuple
 import matplotlib.pyplot as plt
 
 
@@ -9,6 +9,9 @@ GIGABYTE = 10 ** 9
 
 
 def main():
+    directory = ".."
+    directory_size = get_size_str(get_dir_size(directory))
+
     dir_info = get_dir_info("..")
     # exclude empty directories
     dir_info = {dir_: size for dir_, size in dir_info.items() if size > 0}
@@ -18,7 +21,7 @@ def main():
         dir_ += f"\n{get_size_str(size)}"
         info[dir_] = size
 
-    show_figure(info)
+    show_figure((directory, directory_size), info)
 
 
 def get_size_str(size: int) -> str:
@@ -65,14 +68,20 @@ def get_dir_info(directory: str) -> Dict[str, int]:
     return dict(zip(items, sizes))
 
 
-def show_figure(dir_info: Dict[str, float]) -> None:
+def show_figure(
+    directory_info: Tuple[str, str], content_info: Dict[str, float]
+) -> None:
     # Make an example pie plot
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    labels = dir_info.keys()
-    dir_size = sum(dir_info.values())
-    sizes = [(size / dir_size) * 100 for size in dir_info.values()]
+    path, size = directory_info
+    title = f"Path: {path} ({size})"
+    ax.set_title(title)
+
+    labels = content_info.keys()
+    dir_size = sum(content_info.values())
+    sizes = [(size / dir_size) * 100 for size in content_info.values()]
     wedges, plt_labels = ax.pie(sizes, labels=labels)
     ax.axis("equal")
 
