@@ -1,27 +1,11 @@
 import os
-from typing import Dict, Tuple
+from typing import Dict
 import matplotlib.pyplot as plt
 
 
 KILOBYTE = 10 ** 3
 MEGABYTE = 10 ** 6
 GIGABYTE = 10 ** 9
-
-
-def main():
-    directory = ".."
-    directory_size = get_size_str(get_dir_size(directory))
-
-    dir_info = get_dir_info("..")
-    # exclude empty directories
-    dir_info = {dir_: size for dir_, size in dir_info.items() if size > 0}
-
-    info = {}
-    for dir_, size in dir_info.items():
-        dir_ += f"\n{get_size_str(size)}"
-        info[dir_] = size
-
-    show_figure((directory, directory_size), info)
 
 
 def get_size_str(size: int) -> str:
@@ -68,39 +52,55 @@ def get_dir_info(directory: str) -> Dict[str, int]:
     return dict(zip(items, sizes))
 
 
-def show_figure(
-    directory_info: Tuple[str, str], content_info: Dict[str, float]
-) -> None:
-    # Make an example pie plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+class DirPlot:
+    def __init__(self, directory):
+        self.directory = directory
+        self.size = get_dir_size(directory)
+        self.show_figure()
 
-    path, size = directory_info
-    title = f"Path: {path} ({size})"
-    ax.set_title(title)
+    def _format_dir_info(self, dir_info: Dict[str, int]) -> Dict[str, int]:
+        # exclude empty directories
+        dir_info = {dir_: size for dir_, size in dir_info.items() if size > 0}
 
-    labels = content_info.keys()
-    dir_size = sum(content_info.values())
-    sizes = [(size / dir_size) * 100 for size in content_info.values()]
-    wedges, plt_labels = ax.pie(sizes, labels=labels)
-    ax.axis("equal")
+        info = {}
+        for dir_, size in dir_info.items():
+            dir_ += f"\n{get_size_str(size)}"
+            info[dir_] = size
 
-    make_picker(fig, wedges)
-    plt.show()
+        return info
 
+    def show_figure(self) -> None:
+        content_info = get_dir_info("..")
+        content_info = self._format_dir_info(content_info)
 
-def make_picker(fig, wedges):
-    def onclick(event):
-        wedge = event.artist
-        label = wedge.get_label()
-        print(label)
+        # Make an example pie plot
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
-    # Make wedges selectable
-    for wedge in wedges:
-        wedge.set_picker(True)
+        title = f"Path: {self.directory} ({self.size})"
+        ax.set_title(title)
 
-    fig.canvas.mpl_connect("pick_event", onclick)
+        labels = content_info.keys()
+        dir_size = sum(content_info.values())
+        sizes = [(size / dir_size) * 100 for size in content_info.values()]
+        wedges, plt_labels = ax.pie(sizes, labels=labels)
+        ax.axis("equal")
+
+        self.make_picker(fig, wedges)
+        plt.show()
+
+    def make_picker(self, fig, wedges):
+        def onclick(event):
+            wedge = event.artist
+            label = wedge.get_label()
+            print(label)
+
+        # Make wedges selectable
+        for wedge in wedges:
+            wedge.set_picker(True)
+
+        fig.canvas.mpl_connect("pick_event", onclick)
 
 
 if __name__ == "__main__":
-    main()
+    DirPlot("..")
