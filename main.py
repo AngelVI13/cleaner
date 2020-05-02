@@ -9,9 +9,9 @@ GIGABYTE = 10 ** 9
 
 
 def get_size_str(size: int) -> str:
-    if 0 < size < MEGABYTE:
+    if 0 <= size < MEGABYTE:
         return f"{size/KILOBYTE:.2f} KiB"
-    elif MEGABYTE < size < GIGABYTE:
+    elif MEGABYTE <= size < GIGABYTE:
         return f"{size/MEGABYTE:.2f} MiB"
     else:
         return f"{size/GIGABYTE:.2f} GiB"
@@ -78,7 +78,7 @@ class DirPlot:
     @directory.setter
     def directory(self, path):
         self.__directory = path
-        self.__size = get_dir_size(path)
+        self.__size = get_dir_size(path) if os.path.isdir(path) else os.path.getsize(path)
 
     def _create_plot(self):
         self.fig = plt.figure()
