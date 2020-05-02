@@ -1,5 +1,6 @@
 import os
 from typing import Dict
+from contextlib import suppress
 import matplotlib.pyplot as plt
 
 
@@ -57,6 +58,9 @@ def get_dir_info(directory: str) -> Dict[str, int]:
 
 class DirPlot:
     def __init__(self, directory):
+        # todo add selected directory (add explosion effect on selection)
+        # todo add keyboard_handlers to delete or go up or down a folder
+        # todo https://matplotlib.org/3.1.1/users/event_handling.html
         self.__directory = directory
         self.__size = get_dir_size(directory)
         self._create_plot()
@@ -78,7 +82,9 @@ class DirPlot:
     @directory.setter
     def directory(self, path):
         self.__directory = path
-        self.__size = get_dir_size(path) if os.path.isdir(path) else os.path.getsize(path)
+        self.__size = (
+            get_dir_size(path) if os.path.isdir(path) else os.path.getsize(path)
+        )
 
     def _create_plot(self):
         self.fig = plt.figure()
@@ -100,9 +106,12 @@ class DirPlot:
         labels = content_info.keys()
         dir_size = sum(content_info.values())
         sizes = [(size / dir_size) * 100 for size in content_info.values()]
+
+        # Add data to axis
         wedges, plt_labels = self.ax.pie(sizes, labels=labels)
         self.ax.axis("equal")
 
+        # Add callback to chart click
         self.make_picker(self.fig, wedges)
 
     def _format_dir_info(self, dir_info: Dict[str, int]) -> Dict[str, int]:
@@ -119,11 +128,9 @@ class DirPlot:
     def show_figure(self) -> None:
         self._update_plot_data()
 
-        try:
-            plt.show()
-        except AttributeError:
+        with suppress(AttributeError):
             # For some reason when closing diagram it throws AttributeError
-            pass
+            plt.show()
 
     def make_picker(self, fig, wedges):
         def onclick(event):
