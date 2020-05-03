@@ -63,6 +63,8 @@ class DirPlot:
         # todo https://matplotlib.org/3.1.1/users/event_handling.html
         self.__directory = directory
         self.__size = get_dir_size(directory)
+        self._selected = None  # selected element from the pie chart
+
         self._create_plot()
 
         self.show_figure()
@@ -103,12 +105,18 @@ class DirPlot:
         self.ax.set_title(title)
 
         # Calculate chart item proportions
-        labels = content_info.keys()
+        labels = list(content_info.keys())
         dir_size = sum(content_info.values())
         sizes = [(size / dir_size) * 100 for size in content_info.values()]
 
+        # Exploded parts
+        exploded = [0 for _ in range(len(labels))]
+        if self._selected:
+            # explode selected part of the pie chart
+            exploded[labels.index(self._selected)] = 0.1
+
         # Add data to axis
-        wedges, plt_labels = self.ax.pie(sizes, labels=labels)
+        wedges, plt_labels = self.ax.pie(sizes, labels=labels, explode=exploded)
         self.ax.axis("equal")
 
         # Add callback to chart click
@@ -126,10 +134,10 @@ class DirPlot:
         return info
 
     def show_figure(self) -> None:
-        self._update_plot_data()
-
-        with suppress(AttributeError):
-            # For some reason when closing diagram it throws AttributeError
+        with suppress(Exception):
+            # Due to recursive nature of calling show_figure
+            # It throws Exceptions when window is closed
+            self._update_plot_data()
             plt.show()
 
     def make_picker(self, fig, wedges):
@@ -137,8 +145,15 @@ class DirPlot:
             wedge = event.artist
             label = wedge.get_label()
 
-            path, *_ = label.split("\n")
-            self.directory = path
+            if self._selected is None or self._selected != label:
+                # 1st case - Nothing is selected
+                # 2nd case - Something is selected but we clicked on something else
+                self._selected = label
+            else:  # self._selected == label
+                path, *_ = label.split("\n")
+                self.directory = path
+                self._selected = None  # reset selection
+            
             self.show_figure()
 
         # Make wedges selectable
