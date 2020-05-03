@@ -153,7 +153,7 @@ class DirPlot:
                 path, *_ = label.split("\n")
                 self.directory = path
                 self._selected = None  # reset selection
-            
+
             self.show_figure()
 
         # Make wedges selectable
