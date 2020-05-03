@@ -58,7 +58,6 @@ def get_dir_info(directory: str) -> Dict[str, int]:
 
 class DirPlot:
     def __init__(self, directory):
-        # todo add selected directory (add explosion effect on selection)
         # todo add keyboard_handlers to delete or go up or down a folder
         # todo https://matplotlib.org/3.1.1/users/event_handling.html
         self.__directory = directory
@@ -90,7 +89,23 @@ class DirPlot:
 
     def _create_plot(self):
         self.fig = plt.figure()
+        self.fig.canvas.mpl_connect("pick_event", self.onclick)
         self.ax = self.fig.add_subplot(111)
+
+    def onclick(self, event):
+        wedge = event.artist
+        label = wedge.get_label()
+
+        if self._selected is None or self._selected != label:
+            # 1st case - Nothing is selected
+            # 2nd case - Something is selected but we clicked on something else
+            self._selected = label
+        else:  # self._selected == label
+            path, *_ = label.split("\n")
+            self.directory = path
+            self._selected = None  # reset selection
+
+        self._update_plot_data()
 
     def _update_plot_data(self):
         # Clear existing data on plot
@@ -113,14 +128,16 @@ class DirPlot:
         exploded = [0 for _ in range(len(labels))]
         if self._selected:
             # explode selected part of the pie chart
-            exploded[labels.index(self._selected)] = 0.1
+            with suppress(ValueError):
+                exploded[labels.index(self._selected)] = 0.1
 
         # Add data to axis
         wedges, plt_labels = self.ax.pie(sizes, labels=labels, explode=exploded)
         self.ax.axis("equal")
+        self.ax.figure.canvas.draw()
 
-        # Add callback to chart click
-        self.make_picker(self.fig, wedges)
+        # Make wedges selectable
+        self.make_picker(wedges)
 
     def _format_dir_info(self, dir_info: Dict[str, int]) -> Dict[str, int]:
         # exclude empty directories
@@ -134,33 +151,14 @@ class DirPlot:
         return info
 
     def show_figure(self) -> None:
-        with suppress(Exception):
-            # Due to recursive nature of calling show_figure
-            # It throws Exceptions when window is closed
-            self._update_plot_data()
-            plt.show()
+        self._update_plot_data()
 
-    def make_picker(self, fig, wedges):
-        def onclick(event):
-            wedge = event.artist
-            label = wedge.get_label()
+        plt.show()
 
-            if self._selected is None or self._selected != label:
-                # 1st case - Nothing is selected
-                # 2nd case - Something is selected but we clicked on something else
-                self._selected = label
-            else:  # self._selected == label
-                path, *_ = label.split("\n")
-                self.directory = path
-                self._selected = None  # reset selection
-
-            self.show_figure()
-
+    def make_picker(self, wedges):
         # Make wedges selectable
         for wedge in wedges:
             wedge.set_picker(True)
-
-        fig.canvas.mpl_connect("pick_event", onclick)
 
 
 if __name__ == "__main__":
