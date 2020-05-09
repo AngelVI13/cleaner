@@ -52,9 +52,9 @@ class DirPlot:
     def on_button_release(self, event):
         if event.key == "b":
             path = self.directory
-            upper_path = path.rsplit(os.sep)
-            print(path, upper_path)
-            # self.directory
+            upper_path, _current_dir = path.rsplit(os.sep, maxsplit=1)
+            self.directory = upper_path
+            self._update_plot_data()
 
     def onclick(self, event):
         wedge = event.artist
