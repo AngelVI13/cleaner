@@ -18,20 +18,21 @@ class DirPlot:
         filename = f"{time.time()}.txt"
 
         print(f"\nShowing results for: {self.directory}\n")
+        print(f"\nTotal size: {get_size_str(self.size)}")
 
         lines = []
         col_width = max(len(dir_) for dir_ in content_info.keys()) + 2  # padding
         for idx, (dir_, size) in enumerate(content_info.items()):
             line = f"{str(idx+1)} " + "".join([dir_.ljust(col_width), size.ljust(col_width)])
             lines.append(line)
-            print(line)
 
-            if idx + 1 == top:
-                break
+            if idx + 1 < top:
+                print(line)
 
         # write results to file
         with open(filename, "w") as f:
             lines.insert(0, directory)
+            lines.insert(1, f"\nTotal size: {get_size_str(self.size)}")
             f.writelines(f"{line}\n" for line in lines)
 
     @property
@@ -82,4 +83,4 @@ if __name__ == "__main__":
     start = time.time()
     DirPlot(os.path.abspath(path), top)
     end = time.time() - start
-    print(f"Duration: {end}")
+    print(f"\nDuration: {end}")
