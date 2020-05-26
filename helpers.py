@@ -1,5 +1,6 @@
 import os
 from typing import Dict
+from contextlib import suppress
 
 KILOBYTE = 10 ** 3
 MEGABYTE = 10 ** 6
@@ -30,7 +31,8 @@ def get_dir_size(start_path: str = ".") -> int:
             fp = os.path.join(dirpath, f)
             # skip if it is symbolic link
             if not os.path.islink(fp):
-                total_size += os.path.getsize(fp)
+                with suppress(Exception):
+                    total_size += os.path.getsize(fp)
 
     return total_size
 
